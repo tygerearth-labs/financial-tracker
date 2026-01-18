@@ -1,0 +1,93 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Profile model for multi-profile support
+model Profile {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  isActive    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  incomes         Income[]
+  expenses        Expense[]
+  savingsTargets  SavingsTarget[]
+}
+
+// Category model for income and expense categories
+model Category {
+  id        String    @id @default(cuid())
+  name      String
+  type      CategoryType
+  color     String    @default("#000000")
+  icon      String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  incomes   Income[]
+  expenses  Expense[]
+}
+
+enum CategoryType {
+  INCOME
+  EXPENSE
+}
+
+// Income model for cash inflow
+model Income {
+  id          String   @id @default(cuid())
+  amount      Float
+  description String?
+  date        DateTime
+  categoryId  String
+  profileId   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+}
+
+// Expense model for cash outflow
+model Expense {
+  id          String   @id @default(cuid())
+  amount      Float
+  description String?
+  date        DateTime
+  categoryId  String
+  profileId   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+}
+
+// Savings Target model
+model SavingsTarget {
+  id           String   @id @default(cuid())
+  name         String
+  targetAmount Float
+  currentAmount Float   @default(0)
+  startDate    DateTime
+  targetDate   DateTime
+  allocationPercent Float @default(0) // Percentage of income to allocate
+  profileId    String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+}
